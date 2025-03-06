@@ -29,17 +29,18 @@ if (typeFille === "list") {
         await page.waitForSelector(parentSelector);
 
         const data = await page.evaluate((parentSelector) => {
-            return Array.from(document.querySelectorAll(parentSelector)).map(item => {
+            const result = {};
+            const items = document.querySelectorAll(parentSelector);
+            items.forEach(item => {
                 const children = item.querySelector('div > div:nth-child(2) > a');
                 if (children) {
-                    return {
-                        [children.innerText.trim()]: {
-                            ClassName: children.innerText.trim(),
-                            link: children.href.replace('/fr-fr/', '/').trim()
-                        }
+                    const className = children.innerText.trim();
+                    result[className] = {
+                        ClassName: className, link: children.href.replace('/fr-fr/', '/').trim()
                     };
                 }
-            }).filter(Boolean);
+            });
+            return result
         }, parentSelector);
 
         if (data) {
@@ -60,20 +61,21 @@ if (typeFille === "list") {
                 break;
 
             case "md":
-                const markdownContent = data.map(item => {
-                    const className = Object.keys(item)[0];
-                    const classLink = item[className].link;
+
+                const markdownContent = Object.keys(data).map(className => {
+                    const classLink = data[className].link;
                     return `- [${className}](${classLink})\n`;
                 }).join('');
+
                 fileContent = `# Roblox Engine Classes number (${data.length}) \n\n${markdownContent}`;
                 fs.writeFileSync('RobloxApi.md', fileContent);
                 console.log('Data has been saved to RobloxApi.md');
                 break;
 
             case "txt":
-                const textContent = data.map(item => {
-                    const className = Object.keys(item)[0];
-                    const classLink = item[className].link;
+                const textContent = Object.keys(data).map(item => {
+                    const className = item
+                    const classLink = data[item].link;
                     return `${className} : ${classLink} \n`;
                 }).join('');
                 fileContent = textContent;
